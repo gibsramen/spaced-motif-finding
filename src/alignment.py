@@ -2,7 +2,7 @@
 
 """This module contains the code for performing alignment."""
 
-import time
+import sys
 
 def create_empty_matrix(y, x):
     """Initialize and return an empty array of y rows by x columns."""
@@ -32,7 +32,6 @@ def align_strings(p, q):
     """
     score_dict = create_scoring_dict()
     alignment_matrix = create_empty_matrix(len(p)+1, len(q)+1)
-
     for x in range(1, len(q)+1):
         for y in range(1, len(p)+1):
             p_char = p[y-1]
@@ -42,28 +41,29 @@ def align_strings(p, q):
             alignment_matrix[y][x] = alignment_matrix[y-1][x-1] + align_score
     return(alignment_matrix)
 
-def find_best_spaced_motif(text_k1, text_k2, dna, G):
+def find_best_spaced_motif(text_k1, text_k2, dna, gap_lengths):
     """Find the best spaced motif from dna aligning text_k1 and
-    text_k2 with gap, g in G.
+    text_k2 with gap, g, in G.
     """
     k1_align = align_strings(text_k1, dna)
     k2_align = align_strings(text_k2[::-1], dna[::-1])
 
     last_row_k1 = k1_align[-1]
     last_row_k2 = k2_align[-1][::-1]
-    # need to set some of last row values to -inf
-    # first k1 values can't be reached
-    for i in range(len(text_k1)): last_row_k1[i] = -100
+    for i in range(len(text_k1)): 
+        last_row_k1[i] = -sys.maxsize
     
     best_pos = -1
     best_gap = -1
     best_sum = -1
     for i in range(len(last_row_k1) - len(text_k2) - 2):
         dists = []
-        for g in G:
+        for gap in gap_lengths:
             # [pos, gap, sum]
-            if i + g >= len(dna): continue
-            dists.append([i, g, last_row_k1[i] + last_row_k2[i+g]])
+            if i + gap >= len(dna): 
+                continue
+            else:
+                dists.append([i, gap, last_row_k1[i] + last_row_k2[i+gap]])
         max_dist = max(dists, key = lambda x: x[2])
         if max_dist[2] > best_sum:
             best_pos = max_dist[0]
@@ -75,16 +75,8 @@ def find_best_spaced_motif(text_k1, text_k2, dna, G):
     best_k2_pos = best_pos + best_gap
     best_new_k2 = dna[best_k2_pos : best_k2_pos+len(text_k2)]
     return([[best_k1_pos, best_new_k1], best_gap, [best_k2_pos, best_new_k2]])
+        
 
-if __name__ == '__main__':
-    k1 = 'ATCG'
-    k2 = 'GAA'
-    dna = 'GCCATCAGTTCAGAGTCC'
 
-    start = time.time()
-    out = find_best_spaced_motif(k1, k2, dna, [4, 5, 6])
-    end = time.time()
-    print(out)
-    print(end - start)
 
 
