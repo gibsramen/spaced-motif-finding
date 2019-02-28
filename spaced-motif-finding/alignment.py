@@ -64,9 +64,10 @@ def find_best_spaced_motif(text_k1, text_k2, dna, G):
         dists = []
         for g in G:
             # [pos, gap, sum]
+            if i + g >= len(dna):
+                continue
             dists.append([i, g, last_row_k1[i] + last_row_k2[i+g]])
             continue
-        print(dists)
         max_dist = max(dists, key = lambda x: x[2])
         if max_dist[2] > best_sum:
             best_pos = max_dist[0]
@@ -77,7 +78,7 @@ def find_best_spaced_motif(text_k1, text_k2, dna, G):
     best_new_k1 = dna[best_k1_pos : best_k1_pos+len(text_k1)]
     best_k2_pos = best_pos + best_gap
     best_new_k2 = dna[best_k2_pos : best_k2_pos+len(text_k2)]
-    return
+    return([[best_k1_pos, best_new_k1], best_gap, [best_k2_pos, best_new_k2]])
 
 if __name__ == '__main__':
     #k1 = 'ATCG'
@@ -85,6 +86,6 @@ if __name__ == '__main__':
     #dna = 'GCCATCAGTTCAGAGTCC'
     k1 = 'AGCCT'
     k2 = 'TAAT'
-    dna = 'GCCACGCTTTGAAAATCAG'
-    print(k1, k2)
-    find_best_spaced_motif(k1, k2, dna, [4, 5, 6])
+    dna = 'GCCACGCTTTGAAAATCAGTAAT'
+    out = find_best_spaced_motif(k1, k2, dna, [4, 5, 6])
+    print(out)
