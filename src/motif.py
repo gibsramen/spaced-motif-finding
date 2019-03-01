@@ -55,6 +55,7 @@ class Profile:
         """
         if profile_matrix is None:
             raise ValueError('No profile matrix input')
+        self._matrix = profile_matrix
         self._a_dist = profile_matrix[0]
         self._c_dist = profile_matrix[1]
         self._g_dist = profile_matrix[2]
@@ -73,3 +74,31 @@ class Profile:
         print('\t'.join(list(map(str, self._c_dist))))
         print('\t'.join(list(map(str, self._g_dist))))
         print('\t'.join(list(map(str, self._t_dist))))
+
+    def reverse(self):
+        new_prof = [x[::-1] for x in self._matrix]
+        return Profile(new_prof)
+
+    @property
+    def matrix(self):
+        return self._matrix
+
+    @property
+    def length(self):
+        return len(self._matrix[0])
+
+    @property
+    def a_dist(self):
+        return self._a_dist
+
+    @property
+    def c_dist(self):
+        return self._c_dist
+
+    @property
+    def g_dist(self):
+        return self._g_dist
+
+    @property
+    def t_dist(self):
+        return self._t_dist
