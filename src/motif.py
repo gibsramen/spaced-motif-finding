@@ -69,7 +69,7 @@ class Profile:
         return nucl_dist_dict[nucleotide][position]
 
     def print(self):
-        print(' '.join(self._a_dist))
-        print(' '.join(self._c_dist))
-        print(' '.join(self._g_dist))
-        print(' '.join(self._t_dist))
+        print('\t'.join(list(map(str, self._a_dist))))
+        print('\t'.join(list(map(str, self._c_dist))))
+        print('\t'.join(list(map(str, self._g_dist))))
+        print('\t'.join(list(map(str, self._t_dist))))
