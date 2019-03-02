@@ -19,6 +19,14 @@ class SpacedMotif:
         self._k2_mer = text[positions[2]:positions[3]+1]
         self._gap_length = positions[2] - positions[1]
 
+    def distance(self, other):
+        this_motif = self._k1_mer + self._k2_mer
+        other_motif = other.k1_mer + other.k2_mer
+        return sum([int(x != y) for x, y in zip(this_motif, other_motif)])
+
+    def __repr__(self):
+        return '%s-[%i]-%s' % (self._k1_mer, self._gap_length, self._k2_mer)
+
     @property
     def gap_length(self):
         return self._gap_length
@@ -26,7 +34,7 @@ class SpacedMotif:
     @property
     def k1_mer(self):
         return self._k1_mer
-    
+
     @property
     def k2_mer(self):
         return self._k2_mer
@@ -38,3 +46,30 @@ class SpacedMotif:
     @property
     def k2_mer_pos(self):
         return self._positions[1]
+
+class Profile:
+    def __init__(self, profile_matrix=None):
+        """Input a 4 x k matrix where each entry in profile_matrix
+        is a list. Lists should correspond to A, C, G, T probability
+        distributions.
+        """
+        if profile_matrix is None:
+            raise ValueError('No profile matrix input')
+        self._a_dist = profile_matrix[0]
+        self._c_dist = profile_matrix[1]
+        self._g_dist = profile_matrix[2]
+        self._t_dist = profile_matrix[3]
+
+    def get_prob(self, nucleotide, position):
+        """Given a nucleotide and position in the profile, return
+        associated probability.
+        """
+        nucl_dist_dict = {'A':self._a_dist, 'C':self._c_dist,
+                          'G':self._g_dist, 'T':self._t_dist}
+        return nucl_dist_dict[nucleotide][position]
+
+    def print(self):
+        print(' '.join(self._a_dist))
+        print(' '.join(self._c_dist))
+        print(' '.join(self._g_dist))
+        print(' '.join(self._t_dist))
