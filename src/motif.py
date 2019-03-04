@@ -45,7 +45,7 @@ class SpacedMotif:
 
     @property
     def k2_mer_pos(self):
-        return self._positions[1]
+        return self._positions[2]
 
 class Profile:
     def __init__(self, profile_matrix=None):

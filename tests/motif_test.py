@@ -32,7 +32,7 @@ def test_motif_k2_mer_pos():
     dna = 'GCCATCAGTTCAGAGTCC'
     positions = [3, 7, 12, 14]
     test_motif = motif.SpacedMotif(dna, positions)
-    assert(test_motif.k2_mer_pos == 7)
+    assert(test_motif.k2_mer_pos == 12)
 
 def test_motif_distance():
     adna = 'GCCATCAGTTCAGAGTCC'
