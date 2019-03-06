@@ -5,7 +5,6 @@ by variable gap length.
 """
 
 import argparse
-import itertools
 import random
 import sys
 
@@ -27,7 +26,6 @@ def random_string(length):
     return ''.join([random.choice(NUCLS) for i in range(length)])
 
 def create_dna(k1_mer, k2_mer, gaps, mut_rate, length):
-    #rand_gap = random_string(random.choice(gaps))
     rand_gap_length = random.choice(gaps)
     rand_gap = random_string(rand_gap_length)
 
@@ -87,13 +85,13 @@ if __name__ == '__main__':
         print('Length must be greater than 0')
 
     out_file = args.output
-    out_file_stem = args.output[:args.output.index('.')]
+    out_file_stem = args.output[:args.output.rfind('.')]
     out_file_truth = out_file_stem + '_truth.txt'
 
     all_dna = []
+    k1_mer = random_string(args.k1)
+    k2_mer = random_string(args.k2)
     for i in range(args.num_strings):
-        k1_mer = random_string(args.k1)
-        k2_mer = random_string(args.k2)
         dna = create_dna(k1_mer, k2_mer, args.gaps, args.mut_rate,
                 args.length)
         all_dna.append(dna)
@@ -103,7 +101,17 @@ if __name__ == '__main__':
             f.write('%s\n' % dna[0])
 
     with open(out_file_truth, 'w+') as f:
+        f.write('k1-mer: %s\n' % k1_mer)
+        f.write('k2-mer: %s\n' % k2_mer)
+        f.write('Truth Locations:\n')
         for dna in all_dna:
+            dna_string = dna[0]
+            k1_pos = dna[1][0]
+            gap_pos = dna[1][1]
+            k2_pos = dna[1][2]
+            end_pos = dna[1][3]
             pos_string = '\t'.join(list(map(str, dna[1])))
+            pos_string += ' %s' % dna_string[k1_pos:gap_pos]
+            pos_string += ' %s' % dna_string[k2_pos:end_pos]
             f.write('%s\n' % pos_string)
     print('Files created!')
