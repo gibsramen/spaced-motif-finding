@@ -18,7 +18,6 @@ def mutate(text, mut_rate):
         rand_val = random.random()
         if rand_val > mut_rate:
             new_text += text[i]
-            continue
         else:
             remaining_nucls = NUCLS.replace(text[i],'')
             new_text += random.choice(remaining_nucls)
@@ -115,19 +114,21 @@ if __name__ == '__main__':
     gap_dist_counts = gap_dist.values()
 
     # Files to be written:
-    # - motif_lengths.txt
+    # - motif_truth.txt
     # - motif_indices.txt
     # - motif_matrix.txt
     # - gap_distribution.txt
+    # - Dna.txt
 
-    motif_lengths_name = '%s/motif_lengths.txt' % out_dir
+    motif_truth_name = '%s/motif_truth.txt' % out_dir
     motif_indices_name = '%s/motif_indices.txt' % out_dir
     motif_matrix_name = '%s/motif_matrix.txt' % out_dir
     gap_dist_name = '%s/gap_distribution.txt' % out_dir
+    Dna_name = '%s/Dna.txt' % out_dir
 
-    with open(motif_lengths_name, 'w+') as f:
-        f.write('k1 length = %s\n' % args.k1)
-        f.write('k2 length = %s' % args.k2)
+    with open(motif_truth_name, 'w+') as f:
+        f.write('k1_mer\tk2_mer\n')
+        f.write('%s\t%s' % (k1_mer, k2_mer))
 
     with open(motif_indices_name, 'w+') as f:
         f.write('k1_start\tk2_start\n')
@@ -135,8 +136,7 @@ if __name__ == '__main__':
             f.write('%s\t%s\n' % (entry[1][0], entry[1][2]))
 
     with open(motif_matrix_name, 'w+') as f:
-        f.write('\t'.join(list(map(str, range(args.k1+args.k2)))))
-        f.write('\n')
+        f.write('k1\tk2\n')
         for entry in all_dna:
             k1_pos = entry[1][0]
             gap_pos = entry[1][1]
@@ -144,11 +144,15 @@ if __name__ == '__main__':
             end_pos = entry[1][3]
             motif1 = entry[0][k1_pos:gap_pos]
             motif2 = entry[0][k2_pos:end_pos]
-            f.write('\t'.join(list(motif1 + motif2)))
-            f.write('\n')
+            f.write('%s\t%s\n' % (motif1, motif2))
     
     with open(gap_dist_name, 'w+') as f:
-        f.write('%s\n' % '\t'.join(list(map(str, gap_dist_labels))))
-        f.write('%s\n' % '\t'.join(list(map(str, gap_dist_counts))))
+        f.write('gap_length\tcount\n')
+        for i in zip(gap_dist_labels, gap_dist_counts):
+            f.write('%s\t%s\n' % (i[0], i[1]))
+
+    with open(Dna_name, 'w+') as f:
+        for entry in all_dna:
+            f.write('%s\n' % entry[0])
 
     print('Files created!')
