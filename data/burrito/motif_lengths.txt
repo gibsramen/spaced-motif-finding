@@ -1,2 +1,0 @@
-k1 length = 7
-k2 length = 9
