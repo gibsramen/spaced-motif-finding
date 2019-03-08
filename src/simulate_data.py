@@ -5,6 +5,8 @@ by variable gap length.
 """
 
 import argparse
+import collections
+import os
 import random
 import sys
 
@@ -16,7 +18,6 @@ def mutate(text, mut_rate):
         rand_val = random.random()
         if rand_val > mut_rate:
             new_text += text[i]
-            continue
         else:
             remaining_nucls = NUCLS.replace(text[i],'')
             new_text += random.choice(remaining_nucls)
@@ -48,7 +49,6 @@ def create_dna(k1_mer, k2_mer, gaps, mut_rate, length):
                 
     return dna, (k1_pos, gap_pos, k2_pos, end_pos)
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create simulated dataset')
     parser.add_argument('--k1', metavar = 'k1', type = int,
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--length', metavar = 'length', required = True,
                         type = int, help = 'Length of each dna string')
     parser.add_argument('--output', metavar = 'output', required = True,
-                        type = str, help = 'Output location')
+                        type = str, help = 'Output directory')
     args = parser.parse_args()
 
     if args.k1 <= 0:
@@ -84,9 +84,11 @@ if __name__ == '__main__':
     if args.length <= 0:
         print('Length must be greater than 0')
 
-    out_file = args.output
-    out_file_stem = args.output[:args.output.rfind('.')]
-    out_file_truth = out_file_stem + '_truth.txt'
+    out_dir = args.output
+    try:
+        os.mkdir(out_dir)
+    except FileExistsError:
+        pass
 
     all_dna = []
     k1_mer = random_string(args.k1)
@@ -96,22 +98,61 @@ if __name__ == '__main__':
                 args.length)
         all_dna.append(dna)
 
-    with open(out_file, 'w+') as f:
-        for dna in all_dna:
-            f.write('%s\n' % dna[0])
+    gap_dist = {}
+    for dna_string, positions in all_dna:
+        gap = positions[2] - positions[1]
+        if gap_dist.get(gap):
+            gap_dist[gap] += 1
+        else:
+            gap_dist[gap] = 1
+    for poss_gap in args.gaps:
+        if not gap_dist.get(poss_gap):
+            gap_dist[poss_gap] = 0
 
-    with open(out_file_truth, 'w+') as f:
-        f.write('k1-mer: %s\n' % k1_mer)
-        f.write('k2-mer: %s\n' % k2_mer)
-        f.write('Truth Locations:\n')
-        for dna in all_dna:
-            dna_string = dna[0]
-            k1_pos = dna[1][0]
-            gap_pos = dna[1][1]
-            k2_pos = dna[1][2]
-            end_pos = dna[1][3]
-            pos_string = '\t'.join(list(map(str, dna[1])))
-            pos_string += ' %s' % dna_string[k1_pos:gap_pos]
-            pos_string += ' %s' % dna_string[k2_pos:end_pos]
-            f.write('%s\n' % pos_string)
+    gap_dist = collections.OrderedDict(sorted(gap_dist.items()))
+    gap_dist_labels = gap_dist.keys()
+    gap_dist_counts = gap_dist.values()
+
+    # Files to be written:
+    # - motif_truth.txt
+    # - motif_indices.txt
+    # - motif_matrix.txt
+    # - gap_distribution.txt
+    # - Dna.txt
+
+    motif_truth_name = '%s/motif_truth.txt' % out_dir
+    motif_indices_name = '%s/motif_indices.txt' % out_dir
+    motif_matrix_name = '%s/motif_matrix.txt' % out_dir
+    gap_dist_name = '%s/gap_distribution.txt' % out_dir
+    Dna_name = '%s/Dna.txt' % out_dir
+
+    with open(motif_truth_name, 'w+') as f:
+        f.write('k1_mer\tk2_mer\n')
+        f.write('%s\t%s' % (k1_mer, k2_mer))
+
+    with open(motif_indices_name, 'w+') as f:
+        f.write('k1_start\tk2_start\n')
+        for entry in all_dna:
+            f.write('%s\t%s\n' % (entry[1][0], entry[1][2]))
+
+    with open(motif_matrix_name, 'w+') as f:
+        f.write('k1\tk2\n')
+        for entry in all_dna:
+            k1_pos = entry[1][0]
+            gap_pos = entry[1][1]
+            k2_pos = entry[1][2]
+            end_pos = entry[1][3]
+            motif1 = entry[0][k1_pos:gap_pos]
+            motif2 = entry[0][k2_pos:end_pos]
+            f.write('%s\t%s\n' % (motif1, motif2))
+    
+    with open(gap_dist_name, 'w+') as f:
+        f.write('gap_length\tcount\n')
+        for i in zip(gap_dist_labels, gap_dist_counts):
+            f.write('%s\t%s\n' % (i[0], i[1]))
+
+    with open(Dna_name, 'w+') as f:
+        for entry in all_dna:
+            f.write('%s\n' % entry[0])
+
     print('Files created!')
