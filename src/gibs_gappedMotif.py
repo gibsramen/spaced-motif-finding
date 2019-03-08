@@ -216,7 +216,7 @@ def gappedMotifGibbs(Dna,G,k1,k2,n):
 	# Calculate frequency of each gap length observed
 	gapDist=[]
 	for g in G:
-		gapDist.append(bestGaps.count(g)/t)
+		gapDist.append(bestGaps.count(g))
 
 
 	return bestMotifs, bestMotif_indices, bestGaps, [G,gapDist]
@@ -241,10 +241,11 @@ if __name__ == '__main__':
 
 	# Define filenames to write to.
 	logFN=outBasename+'_log.txt'
-	bestMotifsFN=outBasename+'_motifs.txt'
+	motifLengthsFN=outBasename+'_motif_lengths.txt'
+	bestMotifsFN=outBasename+'_motif_strings.txt'
 	bestMotif_indicesFN=outBasename+'_motif_indices.txt'
-	bestGapsFN=outBasename+'_gaps.txt'
-	gapDistributionFN=outBasename+'_gap_dist.txt'
+	bestGapsFN=outBasename+'_gap_counts.txt'
+	gapDistributionFN=outBasename+'_gap_distribution.txt'
 
 	with open(logFN,'w') as f:
 		f.write('# Inputs and Parameters'+'\n')
@@ -256,28 +257,58 @@ if __name__ == '__main__':
 	
 	bestMotifs, bestMotif_indices, bestGaps, gapDistribution=gappedMotifGibbs(Dna,args.gaps,args.k1,args.k2,args.n)
 
+	# Write Motif Lengths
+	with open(motifLengthsFN,'w') as f:
+		f.write('k1_length\tk2_length\n')
+		f.write(str(args.k1)+'\t'+str(args.k2)+'\n')
+
 	# Write bestMotifs
 	with open(bestMotifsFN,'w') as f: 
-		f.write('K1_MOTIF\tK2_MOTIF\n')
+		f.write('k1_motif\tk2_motif\n')
 		f.write('\n'.join([unspaced[:args.k1]+'\t'+unspaced[args.k1:] for unspaced in bestMotifs]))
 	# print('\nbestMotifs',bestMotifs)
 
 	# Write bestMotif Indices
 	with open(bestMotif_indicesFN,'w') as f:
-		f.write('K1_START'+'\t'+'K2_START'+'\n')
+		f.write('k1_start'+'\t'+'k2_start'+'\n')
 		for k1gk2_index , g in zip(bestMotif_indices,bestGaps):
 			f.write(str(k1gk2_index)+'\t'+str(k1gk2_index+args.k1+g)+'\n')
 	# print('\nbestMotif_indices',bestMotif_indices)
 
 	# Write bestGaps
 	with open(bestGapsFN,'w') as f: 
-		f.write('GAP'+'\n')
+		f.write('gap'+'\n')
 		f.write('\n'.join([str(i) for i in bestGaps]))
 	# print('\nbestGaps',bestGaps)
 
 	with open(gapDistributionFN,'w') as f: 
-		f.write('GAP\tFREQUENCY\n')
+		f.write('gap\tcounts\n')
 		for g,g_freq in zip(gapDistribution[0],gapDistribution[1]):
 			f.write(str(g)+'\t'+str(g_freq)+'\n')
 	# print('\ngapDistribution',gapDistribution)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
