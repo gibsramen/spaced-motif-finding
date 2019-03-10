@@ -2,6 +2,7 @@
 
 """This module contains the code for performing alignment."""
 
+import math
 import sys
 
 def create_empty_matrix(y, x, val):
@@ -51,22 +52,32 @@ def find_best_spaced_motif(profile_1, profile_2, dna, gap_lengths):
     best_pos = -1
     best_gap = -1
     best_sum = -1
-    for i in range(len(dna)+1 - profile_2.length - 2):
+    # print("Allowed gap lengths are {}".format(gap_lengths))
+    for i in range(profile_1.length, len(dna) + 1 - profile_2.length - 2):
+        # print("Starting at new i of length {}".format(i))
         dists = []
         for gap in gap_lengths:
+            # print("  DNA string is of length {}".format(len(dna)))
+            # print("  gap plus index is of length {}".format(i + gap))
             if i + gap >= len(dna): 
                 continue
             else:
-                # [pos, gap, sum]
-                dists.append([i, gap, last_row_k1[i] * last_row_k2[i+gap]])
-        max_dist = max(dists, key = lambda x: x[2])
-        if max_dist[2] > best_sum:
-            best_pos = max_dist[0]
-            best_gap = max_dist[1]
-            best_sum = max_dist[2]
+                # [pos, gap, prod]
+                # print("    Adding to the distance list")
+                dists.append([i, gap, math.log(last_row_k1[i] * last_row_k2[i+gap] + 1)])
+        if len(dists) > 0:
+            max_dist = max(dists, key = lambda x: x[2])
+            if max_dist[2] > best_sum:
+                best_pos = max_dist[0]
+                best_gap = max_dist[1]
+                best_sum = max_dist[2]
 
     best_k1_pos = best_pos - profile_1.length 
     best_new_k1 = dna[best_k1_pos : best_k1_pos + profile_1.length]
     best_k2_pos = best_pos + best_gap
     best_new_k2 = dna[best_k2_pos : best_k2_pos + profile_2.length]
-    return([[best_k1_pos, best_new_k1], best_gap, [best_k2_pos, best_new_k2]])
+    if best_new_k1+best_new_k2 == "CATCCAGTA":
+        print("Weird return from alignment")
+        print(last_row_k1)
+    return(best_k1_pos, best_new_k1+best_new_k2, best_gap)
+    # return([[best_k1_pos, best_new_k1], best_gap, [best_k2_pos, best_new_k2]])
