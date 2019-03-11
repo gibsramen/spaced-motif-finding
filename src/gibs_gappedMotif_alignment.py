@@ -139,6 +139,7 @@ def gappedMotifGibbsAlignment(Dna, G, k1, k2, n):
 			G
 		)
 
+		assert all([len(x) == len(motifs[0]) for x in motifs]), print(i, motifs)
 		# print('\n>> New Motifs')
 		# for z in motifs: print('',z)
 
@@ -258,7 +259,7 @@ if __name__ == '__main__':
 	with open(bestMotif_indicesFN,'w') as f:
 		f.write('k1_start'+'\t'+'k2_start'+'\n')
 		for k1gk2_index , g in zip(bestMotif_indices,bestGaps):
-			f.write(str(k1gk2_index)+'\t'+str(k1gk2_index+args.k1+g)+'\n')
+			f.write(str(k1gk2_index)+'\t'+str(k1gk2_index)+str(args.k1)+str(g)+'\n')
 	# print('\nbestMotif_indices',bestMotif_indices)
 
 	# Write bestGaps

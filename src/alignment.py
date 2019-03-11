@@ -70,5 +70,4 @@ def find_best_spaced_motif(profile_1, profile_2, dna, gap_lengths):
     best_new_k1 = dna[best_k1_pos:best_k1_pos + profile_1.length]
     best_k2_pos = best_k1_pos + profile_1.length + dist_choice[1]
     best_new_k2 = dna[best_k2_pos : best_k2_pos + profile_2.length]
-    return [[best_k1_pos, best_new_k1], dist_choice[1], [best_k2_pos,
-        best_new_k2]]
+    return [[best_k1_pos, best_k2_pos], best_new_k1 + best_new_k2, dist_choice[1]]

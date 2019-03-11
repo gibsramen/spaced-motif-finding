@@ -76,7 +76,13 @@ def plot_motif(kmer_motif, ax):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
-    ax.set_xticklabels(range(0, x))
+    ax.set_xticklabels([])
+    ax.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False) # labels along the bottom edge are off
     ax.set_xlim((.5, x)) 
     ax.set_ylim((0, 2.5))
     ax.set_ylabel("bits")
@@ -92,7 +98,7 @@ def plot_gap_distribution(gap_dist, allowed_gaps, ax):
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     x_range = list(range(min(allowed_gaps) - 1, max(allowed_gaps) + 2))
-    ax.set_xticks(ticks = x_range)
+    ax.set_xticks([])
     ax.set_xlim((min(allowed_gaps) - 1.5, max(allowed_gaps) + 1.5))
     ax.set_ylabel("Gap Count")
     
@@ -119,19 +125,19 @@ def plot_motif_dist_motif(str_fname, gap_counts_fname, log_fname):
     k1mer_entropy_norm = entropy_normalize(k1mer_profile)
     k2mer_entropy_norm = entropy_normalize(k2mer_profile)
 
-    gs = gridspec.GridSpec(1, 3)
+    gs = gridspec.GridSpec(1, 15)
 
     fig = plt.figure(figsize = (18, 4))
     
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs[0, 0:5])
 
     ax1 = plot_motif(k1mer_entropy_norm, ax1)
 
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = fig.add_subplot(gs[0, 6:9])
 
     ax2 = plot_gap_distribution(gap_distribution, [12], ax2)
 
-    ax3 = fig.add_subplot(gs[0, 2])
+    ax3 = fig.add_subplot(gs[0, 10:])
 
     ax3 = plot_motif(k2mer_entropy_norm, ax3)
 
