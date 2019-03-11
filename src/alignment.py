@@ -5,6 +5,8 @@
 import math
 import sys
 
+from numpy.random import choice
+
 def create_empty_matrix(y, x, val):
     """Initialize and return an empty array of y rows by x columns."""
     row = [val for i in range(x)]
@@ -49,35 +51,24 @@ def find_best_spaced_motif(profile_1, profile_2, dna, gap_lengths):
     for i in range(profile_2.length):
         last_row_k2[-i-1] = 0
     
-    best_pos = -1
-    best_gap = -1
-    best_sum = -1
-    # print("Allowed gap lengths are {}".format(gap_lengths))
+    dists = []
     for i in range(profile_1.length, len(dna) + 1 - profile_2.length - 2):
-        # print("Starting at new i of length {}".format(i))
-        dists = []
         for gap in gap_lengths:
-            # print("  DNA string is of length {}".format(len(dna)))
-            # print("  gap plus index is of length {}".format(i + gap))
             if i + gap >= len(dna): 
                 continue
             else:
                 # [pos, gap, prod]
-                # print("    Adding to the distance list")
-                dists.append([i, gap, math.log(last_row_k1[i] * last_row_k2[i+gap] + 1)])
-        if len(dists) > 0:
-            max_dist = max(dists, key = lambda x: x[2])
-            if max_dist[2] > best_sum:
-                best_pos = max_dist[0]
-                best_gap = max_dist[1]
-                best_sum = max_dist[2]
+                #dists.append([i, gap, math.log(last_row_k1[i] * last_row_k2[i+gap] + 1)])
+                dist = last_row_k1[i] * last_row_k2[i+gap]
+                dists.append([i, gap, dist])
+    dist_sum = sum([x[2] for x in dists])
+    wt_dists = [x[2]/dist_sum for x in dists]
+    rand_choice_index = choice(range(len(dists)), p=wt_dists)
+    dist_choice = dists[rand_choice_index]
 
-    best_k1_pos = best_pos - profile_1.length 
-    best_new_k1 = dna[best_k1_pos : best_k1_pos + profile_1.length]
-    best_k2_pos = best_pos + best_gap
+    best_k1_pos = dist_choice[0] - profile_1.length
+    best_new_k1 = dna[best_k1_pos:best_k1_pos + profile_1.length]
+    best_k2_pos = best_k1_pos + profile_1.length + dist_choice[1]
     best_new_k2 = dna[best_k2_pos : best_k2_pos + profile_2.length]
-    if best_new_k1+best_new_k2 == "CATCCAGTA":
-        print("Weird return from alignment")
-        print(last_row_k1)
-    return(best_k1_pos, best_new_k1+best_new_k2, best_gap)
-    # return([[best_k1_pos, best_new_k1], best_gap, [best_k2_pos, best_new_k2]])
+    return [[best_k1_pos, best_new_k1], dist_choice[1], [best_k2_pos,
+        best_new_k2]]
