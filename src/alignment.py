@@ -33,8 +33,6 @@ def align_strings(profile, q):
             q_char = q[x-1]
 
             align_score = profile.get_prob(q_char, y-1)
-#            alignment_matrix[y][x] = round(alignment_matrix[y-1][x-1]
-#                    * align_score, 6)
             alignment_matrix[y][x] = (alignment_matrix[y-1][x-1]
                     * align_score)
     return(alignment_matrix)

@@ -1,3 +1,4 @@
+import sys
 import argparse
 import numpy as np
 import os
@@ -20,9 +21,6 @@ def profileWithPseudoCounts(Dna):
                 nt = Dna[i][j]
             except BaseException:
                 print(i, j)
-                # print(len(Dna))
-                # print(len(Dna[i]))
-                # print(Dna)
             frequencies[nt] += 1
         As += [frequencies['A'] / sum(frequencies.values())]
         Cs += [frequencies['C'] / sum(frequencies.values())]
@@ -30,10 +28,6 @@ def profileWithPseudoCounts(Dna):
         Ts += [frequencies['T'] / sum(frequencies.values())]
 
     return [As, Cs, Gs, Ts]
-
-# # Test profileWithPseudoCounts(Dna)
-# print('profile','AAAA','AAAT','AAGA','ACAA =')
-# for i in profileWithPseudoCounts(['AAAA','AAAT','AAGA','ACAA']): print(i)
 
 
 def scoreMotifs(profile, motifs):
