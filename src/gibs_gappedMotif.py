@@ -143,7 +143,36 @@ def profileBiasedGappedK1K2mer(profile,dna,k1,k2,G):
 
 # profileBiasedGappedK1K2mer(profile,dna,k1,k2,G)
 
-def gappedMotifGibbs(Dna,G,k1,k2,n):
+def initializeRandomKmers(Dna,k1,k2,g_min,g_max):
+	motifs         = []
+	motifs_indices = []
+	gaps           = []
+	for d in Dna:
+		randStart=np.random.choice(range(0,len(d)-(k1+k2+g_max)))
+		randGap  =np.random.choice(range(g_min,g_max+1))
+
+		k1Start=randStart
+		k1End=k1+k1Start
+
+		k2Start=randStart+k1+randGap
+		k2End=randStart+k1+randGap+k2
+
+		motifs.append(d[k1Start:k1End]+d[k2Start:k2End])
+		motifs_indices.append(randStart)
+		gaps.append(randGap)
+
+	# print('motifs')
+	# for i in motifs: print(i)
+
+	# print('\nmotif_indicers')
+	# for i in motifs_indices: print(i)
+
+	# print('\ngaps')
+	# for i in gaps: print(i)
+
+	return motifs, motifs_indices, gaps
+
+def gappedMotifGibbs(Dna,G,k1,k2,runs,iters_perRun):
 	'''
 	Gibbs-sampler for gapped composite motif finding from t strings dna.
 	
@@ -163,17 +192,22 @@ def gappedMotifGibbs(Dna,G,k1,k2,n):
 
 	t = len(Dna)
 
-	# Choose arbitrary motifs to instantiate motifs.
-	# Choose first k1-g-k2mer where k1 starts at 0 and gap = min(G). 
-	# Append unspaced motif to motifs.
-	motifs         = []
-	motifs_indices = []
-	gaps           = []
-	g_min          = min(G)
-	for d in Dna:
-		motifs.append(d[0:k1]+d[k1+g_min:k1+g_min+k2])
-		motifs_indices.append(0)
-		gaps.append(g_min)
+	# # Choose arbitrary motifs to instantiate motifs.
+	# # Choose first k1-g-k2mer where k1 starts at 0 and gap = min(G). 
+	# # Append unspaced motif to motifs.
+	# motifs         = [] x
+	# motifs_indices = [] x
+	# gaps           = [] x
+	# g_min          = min(G)
+	# for d in Dna:
+	# 	motifs.append(d[0:k1]+d[k1+g_min:k1+g_min+k2])
+	# 	motifs_indices.append(0)
+	# 	gaps.append(g_min)
+
+	# Initialize with random motifs
+	g_min=min(G)
+	g_max=max(G)
+	motifs, motifs_indices, gaps = initializeRandomKmers(Dna,k1,k2,g_min,g_max)
 
 	# Initialize best motifs.
 	bestMotifs = motifs
@@ -181,37 +215,40 @@ def gappedMotifGibbs(Dna,G,k1,k2,n):
 	bestGaps   = gaps
 	score_bestMotifs = scoreMotifs(profileWithPseudoCounts(bestMotifs),bestMotifs)
 
-	# Sample n times.
-	for j in range(n):
-		
-		# Choose random d in Dna to sample.
-		i = choice(range(t))
-		
-		# print('\n-------------\ni',i)
-		# print('\nmotifs')
-		# for z in motifs: print('',z)
-		# print('\ndna[i]',Dna[i])
+	for run in range(runs):
+		motifs, motifs_indices, gaps = initializeRandomKmers(Dna,k1,k2,g_min,g_max)
 
-		# Create profile of all motifs except ith motif. 
-		motifs_exceptI = [m for m_index,m in enumerate(motifs) if m_index!=i ]
-		profile_exceptI = profileWithPseudoCounts(motifs_exceptI)
+		# Sample n times.
+		for j in range(iters_perRun):
+			
+			# Choose random d in Dna to sample.
+			i = choice(range(t))
+			
+			# print('\n-------------\ni',i)
+			# print('\nmotifs')
+			# for z in motifs: print('',z)
+			# print('\ndna[i]',Dna[i])
 
-		# print('\nmotifs except i')
-		# for z in motifs_exceptI: print('',z)
+			# Create profile of all motifs except ith motif. 
+			motifs_exceptI = [m for m_index,m in enumerate(motifs) if m_index!=i ]
+			profile_exceptI = profileWithPseudoCounts(motifs_exceptI)
+
+			# print('\nmotifs except i')
+			# for z in motifs_exceptI: print('',z)
 
 
-		# Roll a biased die to randomly choose k1/g/k2 motif.
-		motifs_indices[i], motifs[i], gaps[i] = profileBiasedGappedK1K2mer(profile_exceptI, Dna[i], k1, k2, G)
+			# Roll a biased die to randomly choose k1/g/k2 motif.
+			motifs_indices[i], motifs[i], gaps[i] = profileBiasedGappedK1K2mer(profile_exceptI, Dna[i], k1, k2, G)
 
-		# print('\n>> New Motifs')
-		# for z in motifs: print('',z)
+			# print('\n>> New Motifs')
+			# for z in motifs: print('',z)
 
-		# Check if new motifs are better than old motifs.
-		if scoreMotifs(profileWithPseudoCounts(motifs),motifs) < score_bestMotifs:
-			bestMotifs        = motifs
-			bestMotif_indices = motifs_indices
-			bestGaps          = gaps
-			score_bestMotifs  = scoreMotifs(profileWithPseudoCounts(bestMotifs),motifs)
+			# Check if new motifs are better than old motifs.
+			if scoreMotifs(profileWithPseudoCounts(motifs),motifs) < score_bestMotifs:
+				bestMotifs        = motifs
+				bestMotif_indices = motifs_indices
+				bestGaps          = gaps
+				score_bestMotifs  = scoreMotifs(profileWithPseudoCounts(bestMotifs),motifs)
 
 	# Calculate frequency of each gap length observed
 	gapDist=[]
@@ -226,7 +263,8 @@ if __name__ == '__main__':
 	parser.add_argument('--k1', metavar = 'k1', type=int, help='Integer length of k1.',required=True)
 	parser.add_argument('--k2', metavar = 'k2', type=int, help='Integer length of k2.',required=True)
 	parser.add_argument('--gaps', metavar = 'gaps', type=int, nargs='+', help='Valid gaps to search for. Collection of integers (min length 1) delimited by spaces.',required=True)
-	parser.add_argument('--n', metavar = 'n', type=int, help='Number of Gibs sampling iterations.',required=True)
+	parser.add_argument('--runs', metavar = 'runs', type=int, help='Number of times to randomly initialize motifs.',required=True)
+	parser.add_argument('--iters', metavar = 'iters', type=int, help='Number of Gibs sampling iterations per run.',required=True)
 	parser.add_argument('--input', metavar = 'input', type=str, help='A .txt file. Inputted collection Dna of string dna. Each string dna should be on its own line.',required=True)
 	parser.add_argument('--outputdir', metavar = 'outputdir', type=str, help='Output /dir/ (do not append with .txt or other suffix).',required=True)
 	args=parser.parse_args()
@@ -253,9 +291,10 @@ if __name__ == '__main__':
 		f.write('gaps: '+str(args.gaps)+'\n')
 		f.write('k1 length: '+str(args.k1)+'\n')
 		f.write('k2 length: '+str(args.k2)+'\n')
-		f.write('Sampling iterations: '+str(args.n)+'\n')
+		f.write('Number of initial random motifs (runs): '+str(args.runs)+'\n')
+		f.write('Number of iterations of single run (iters): '+str(args.iters)+'\n')
 	
-	bestMotifs, bestMotif_indices, bestGaps, gapDistribution=gappedMotifGibbs(Dna,args.gaps,args.k1,args.k2,args.n)
+	bestMotifs, bestMotif_indices, bestGaps, gapDistribution=gappedMotifGibbs(Dna,args.gaps,args.k1,args.k2,args.runs,args.iters)
 
 	# Write Motif Lengths
 	with open(motifLengthsFN,'w') as f:
