@@ -33,8 +33,8 @@ def align_strings(profile, q):
             q_char = q[x-1]
 
             align_score = profile.get_prob(q_char, y-1)
-            alignment_matrix[y][x] = round(alignment_matrix[y-1][x-1]
-                    * align_score, 6)
+            alignment_matrix[y][x] = (alignment_matrix[y-1][x-1]
+                    * align_score)
     return(alignment_matrix)
 
 def find_best_spaced_motif(profile_1, profile_2, dna, gap_lengths):
@@ -58,9 +58,9 @@ def find_best_spaced_motif(profile_1, profile_2, dna, gap_lengths):
                 continue
             else:
                 # [pos, gap, prod]
-                #dists.append([i, gap, math.log(last_row_k1[i] * last_row_k2[i+gap] + 1)])
                 dist = last_row_k1[i] * last_row_k2[i+gap]
                 dists.append([i, gap, dist])
+
     dist_sum = sum([x[2] for x in dists])
     wt_dists = [x[2]/dist_sum for x in dists]
     rand_choice_index = choice(range(len(dists)), p=wt_dists)
