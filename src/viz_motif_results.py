@@ -103,7 +103,7 @@ def plot_gap_distribution(gap_counts, allowed_gaps, ax):
     # TODO: Make more flexible
     ax.set_xticks(allowed_gaps)
     ax.set_ylim((0, 25))
-    ax.set_xlim((min(allowed_gaps) - 0.5, max(allowed_gaps) + 0.5))
+    ax.set_xlim((min(allowed_gaps) - 1.5, max(allowed_gaps) + 1.5))
     ax.set_ylabel("Gap Count")
     
     return ax
