@@ -1,25 +1,23 @@
 #!/usr/bin/env python
 
-"""Script to simulate strings, DNA, each with implanted motif separated
-by variable gap length.
+"""
+Script to visualize gapped motifs.
 """
 
 import argparse
-import collections
-import os
-import random
-import sys
-
-
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.text import TextPath
 from matplotlib.patches import PathPatch
 from matplotlib.font_manager import FontProperties
-import matplotlib.pyplot as plt
-from motif import Profile
-from gibs_gappedMotif_alignment import profileWithPseudoCounts
 from math import log2
 from matplotlib import gridspec
+
+
+from motif import Profile
+from gibs_gappedMotif_alignment import profileWithPseudoCounts
+
 
 
 fp = FontProperties(family="Arial", weight="bold") 
@@ -77,12 +75,14 @@ def plot_motif(kmer_motif, ax):
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.set_xticklabels([])
+
     ax.tick_params(
-        axis='x',          # changes apply to the x-axis
-        which='both',      # both major and minor ticks are affected
-        bottom=False,      # ticks along the bottom edge are off
-        top=False,         # ticks along the top edge are off
-        labelbottom=False) # labels along the bottom edge are off
+        axis = 'x',          # changes apply to the x-axis
+        which = 'both',      # both major and minor ticks are affected
+        bottom = False,      # ticks along the bottom edge are off
+        top = False,         # ticks along the top edge are off
+        labelbottom = False) # labels along the bottom edge are off
+
     ax.set_xlim((.5, x)) 
     ax.set_ylim((0, 2.5))
     ax.set_ylabel("bits")
@@ -90,22 +90,26 @@ def plot_motif(kmer_motif, ax):
     return ax
 
 
-def plot_gap_distribution(gap_dist, allowed_gaps, ax):
+def plot_gap_distribution(gap_counts, allowed_gaps, ax):
+
+    gap_dist = pd.Series(gap_counts).value_counts()
     
-    ax.hist(gap_dist, align = "left", width = 0.14)
+    ax.bar(gap_dist.index, gap_dist.values, width = 0.14)
     
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
-    x_range = list(range(min(allowed_gaps) - 1, max(allowed_gaps) + 2))
-    ax.set_xticks([])
-    ax.set_xlim((min(allowed_gaps) - 1.5, max(allowed_gaps) + 1.5))
+
+    # TODO: Make more flexible
+    ax.set_xticks(allowed_gaps)
+    ax.set_ylim((0, 25))
+    ax.set_xlim((min(allowed_gaps) - 0.5, max(allowed_gaps) + 0.5))
     ax.set_ylabel("Gap Count")
     
     return ax
 
 
-def plot_motif_dist_motif(str_fname, gap_counts_fname, log_fname):
+def plot_motif_dist_motif(str_fname, gap_counts_fname, log_fname, output_fname):
     
     with open(str_fname) as f:
         lines = [x.strip().split("\t") for x in f.readlines()][1:]
@@ -114,7 +118,7 @@ def plot_motif_dist_motif(str_fname, gap_counts_fname, log_fname):
         gap_distribution = [int(x.strip()) for x in f.readlines()[1:]]
 
     with open(log_fname) as f:
-        allowed_gaps = list(f.readlines()[2].split(": ")[1])
+        allowed_gaps = [int(x) for x in f.readlines()[2].split(": ")[1][1:-2].split(", ")]
     
     k1mers = [line[0] for line in lines]
     k2mers = [line[1] for line in lines]
@@ -135,11 +139,13 @@ def plot_motif_dist_motif(str_fname, gap_counts_fname, log_fname):
 
     ax2 = fig.add_subplot(gs[0, 6:9])
 
-    ax2 = plot_gap_distribution(gap_distribution, [12], ax2)
+    ax2 = plot_gap_distribution(gap_distribution, allowed_gaps, ax2)
 
     ax3 = fig.add_subplot(gs[0, 10:])
 
     ax3 = plot_motif(k2mer_entropy_norm, ax3)
+
+    plt.savefig(output_fname, dpi = 300)
 
     plt.show()
 
@@ -151,13 +157,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Visualize output of gapped motif finding')
     parser.add_argument('--string', metavar = 'string', type = str,
                         help = 'Location of motif_strings.txt file', required = True)
-    parser.add_argument('--gap_dist', metavar = 'gap_dist', type = str,
-                        help = 'Location of gap_distribution.txt file', required = True)
+
+    parser.add_argument('--gap_count', metavar = 'gap_count', type = str,
+                        help = 'Location of gap_count.txt file', required = True)
+
     parser.add_argument('--log', metavar = 'log', type = str,
                         help = 'location of motif finding log file',
                         required = True)
+
+    parser.add_argument('--output', metavar = 'output', type = str,
+                        help = 'location and name of output file',
+                        required = True)
+
     args = parser.parse_args()
 
-    plot_motif_dist_motif(args.string, args.gap_dist, args.log)
+    plot_motif_dist_motif(args.string, args.gap_count, args.log, args.output)
 
     print("Done!")
